@@ -54,7 +54,7 @@ export function DiscountCard({ discount }: { discount: Discount }) {
       />
 
       <div className="flex flex-1 flex-col gap-3 p-4">
-        <h2 className="text-base leading-snug text-pretty">{title}</h2>
+        <h3 className="text-base leading-snug text-pretty">{title}</h3>
 
         <p className="text-sm">
           {reviews.summary}{" "}

@@ -33,12 +33,16 @@ pnpm dev
 - **`docs/adr/`** — the decisions of record. Where this README and an ADR disagree, the
   ADR wins.
 
-Two decisions worth knowing before you read the code:
+Three decisions worth knowing before you read the code:
 
 - Discounts are selected by **review score**, not discount depth, because Steam's store
   search silently ignores a discount sort (ADR-0001).
 - Filtering happens **client-side within the Shelf**, not by delegating to Steam's query
   parameters (ADR-0003). Interface copy must therefore never imply complete coverage.
+- Countdowns belong to **Sales, never to Discounts** (ADR-0006). A Sale's real window
+  comes from the partner event record on its page; per-Discount expiry is absent from
+  the store-search payload the Shelf is built from, so no Shelf card may carry a clock
+  or appear to share a campaign's deadline.
 
 ## Fonts
 
@@ -64,12 +68,27 @@ downstream of the network — parsing, Shelf assembly, caching, price normalisat
 exercised through it against real captured Steam payloads, never mocked in isolation.
 Filtering and sorting are pure functions over a Shelf and are tested directly.
 
-The captured payload lives at `src/lib/shelf/fixtures/store-search.json`. Recapture it by
-saving the response body of Steam's store search verbatim:
+The captured payloads live beside the code that parses them. Recapture any of them by
+saving the response body verbatim:
 
 ```bash
-curl "https://store.steampowered.com/search/results?specials=1&infinite=1&sort_by=Reviews_DESC&start=0&count=100&cc=us&l=english" \
-  > src/lib/shelf/fixtures/store-search.json
+# The Shelf — one file per page, all five captured in the same burst so they
+# are one consistent slice of the ranking rather than five moments
+for start in 0 100 200 300 400; do
+  curl "https://store.steampowered.com/search/results?specials=1&infinite=1&sort_by=Reviews_DESC&start=$start&count=100&cc=us&l=english" \
+    > "src/lib/shelf/fixtures/store-search/start-$start.json"
+done
+
+# The Sale layer: which campaigns are up, and one campaign's page
+curl "https://store.steampowered.com/api/featuredcategories?cc=us&l=english" \
+  > src/lib/sales/fixtures/featured-categories.json
+curl "https://store.steampowered.com/sale/SEGAPublisherSale2026?cc=us&l=english" \
+  > src/lib/sales/fixtures/sale-page.html
 ```
+
+The sale-page capture is what makes a real countdown testable: its partner event record
+holds the campaign's true start and end, and the tests judge it against pinned instants
+before, during and after that window. Recapturing it with a different campaign means
+updating the expected timestamps to that campaign's.
 
 Issues live in Linear, not GitHub Issues — see `docs/agents/issue-tracker.md`.
