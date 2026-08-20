@@ -40,6 +40,22 @@ Two decisions worth knowing before you read the code:
 - Filtering happens **client-side within the Shelf**, not by delegating to Steam's query
   parameters (ADR-0003). Interface copy must therefore never imply complete coverage.
 
+## Fonts
+
+- **Geist Sans** (body) via `next/font/google`.
+- **[Departure Mono](https://departuremono.com/)** (headings and monospace) —
+  self-hosted via `next/font/local` from `src/fonts/`.
+
+Departure Mono is © 2022–2024 Helena Zhang and licensed under the **SIL Open Font
+License 1.1**; the licence ships beside the font at
+`src/fonts/DepartureMono-LICENSE.txt` and must stay there. No Reserved Font Name is
+declared. (The project's GitHub repo carries an MIT licence, but that covers the
+website source, not the font software.)
+
+It ships a **single Regular weight — no bold, no italic**. `globals.css` sets
+`font-synthesis-weight: none` on headings so nothing renders a smeared faux-bold; use
+size and colour for emphasis instead of weight.
+
 ## Testing
 
 Tests are written at a single seam: the data layer's **injected fetcher**. Everything

@@ -6,7 +6,7 @@ export default function Home() {
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col justify-center gap-6 px-6 py-24">
       <div className="flex flex-col gap-3">
         <div className="flex items-start justify-between gap-4">
-          <h1 className="text-4xl font-semibold tracking-tight">Steampunk</h1>
+          <h1 className="text-4xl">Steampunk</h1>
           <ModeToggle />
         </div>
         <p className="text-muted-foreground text-lg text-balance">
