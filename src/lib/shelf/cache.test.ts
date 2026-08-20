@@ -194,6 +194,25 @@ describe("createShelfCache", () => {
       await expect(cache.serve()).resolves.toBeNull();
     });
 
+    it("still answers when the failure reporter fails asynchronously", async () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+      const source = replayingSteam();
+      source.rateLimits();
+      const cache = createShelfCache({
+        fetcher: source.fetcher,
+        now: clock.now,
+        // TypeScript accepts an async function where a `() => void` is asked
+        // for, so a hook can fail after the call that made it has returned.
+        onRefreshFailed: async () => {
+          throw new Error("the logger is slow to fail");
+        },
+      });
+
+      await expect(cache.serve()).resolves.toBeNull();
+      await vi.waitFor(() => expect(warn).toHaveBeenCalled());
+      warn.mockRestore();
+    });
+
     it("still serves when the host refuses to take the revalidation", async () => {
       const source = replayingSteam();
       const cache = createShelfCache({

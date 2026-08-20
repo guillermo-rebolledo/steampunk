@@ -125,11 +125,19 @@ function reportToLogs(error: unknown): void {
  * else's code: reporting a failed refresh and handing one to the host are
  * bookkeeping, and neither may turn into the error this cache exists to keep
  * off the visitor's screen.
+ *
+ * Catching is not enough on its own. TypeScript lets an `async` function stand
+ * in for a `() => void`, so a hook can fail by returning a promise that
+ * rejects later — past this `try`, and out as an unhandled rejection.
  */
-function withoutEscaping(effect: () => void): void {
+function withoutEscaping(effect: () => unknown): void {
   try {
-    effect();
+    void Promise.resolve(effect()).catch(reportIgnored);
   } catch (error) {
-    console.warn("A Shelf cache side effect threw and was ignored", error);
+    reportIgnored(error);
   }
+}
+
+function reportIgnored(error: unknown): void {
+  console.warn("A Shelf cache side effect threw and was ignored", error);
 }
