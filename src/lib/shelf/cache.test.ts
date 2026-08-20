@@ -180,6 +180,41 @@ describe("createShelfCache", () => {
       });
     });
 
+    it("still answers when the failure reporter itself throws", async () => {
+      const source = replayingSteam();
+      source.rateLimits();
+      onRefreshFailed.mockImplementation(() => {
+        throw new Error("the logger is having a bad day too");
+      });
+      const cache = cacheFor(source.fetcher);
+
+      // The cold path is the one that awaits the refresh, so a reporter that
+      // throws there rejects the visitor's `serve` — bookkeeping about a
+      // failure turning into the error page the cache exists to prevent.
+      await expect(cache.serve()).resolves.toBeNull();
+    });
+
+    it("still serves when the host refuses to take the revalidation", async () => {
+      const source = replayingSteam();
+      const cache = createShelfCache({
+        fetcher: source.fetcher,
+        now: clock.now,
+        onRefreshFailed,
+        // What `after` does when it is called outside a request lifecycle.
+        afterResponding: () => {
+          throw new Error("after() was called outside a request scope");
+        },
+      });
+      const good = await cache.serve();
+
+      clock.advanceBy(SHELF_FRESH_FOR);
+
+      await expect(cache.serve()).resolves.toBe(good);
+      // The refresh still ran; it just did so without lifecycle protection.
+      await rebuiltAt(cache, clock.now());
+      expect(source.calls).toHaveLength(10);
+    });
+
     it("has nothing to serve when the very first assembly fails", async () => {
       const source = replayingSteam();
       source.rateLimits();

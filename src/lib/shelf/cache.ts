@@ -79,7 +79,7 @@ export function createShelfCache({
       })
       .catch((error: unknown) => {
         nextAttemptAt = now() + RETRY_AFTER_BLOCK;
-        onRefreshFailed(error);
+        withoutEscaping(() => onRefreshFailed(error));
       })
       .finally(() => {
         inFlight = null;
@@ -102,7 +102,11 @@ export function createShelfCache({
         // the host rather than dropped, because a promise still in flight when
         // a serverless invocation ends can be frozen there — which would leave
         // `inFlight` set forever and this instance never refreshing again.
-        afterResponding(refresh());
+        //
+        // The refresh has already started by the time the handoff is offered,
+        // so a host that refuses it — `after` throws outside a request — costs
+        // the refresh its lifecycle protection, not the visitor their Shelf.
+        withoutEscaping(() => afterResponding(refresh()));
       }
 
       return held;
@@ -112,4 +116,20 @@ export function createShelfCache({
 
 function reportToLogs(error: unknown): void {
   console.warn("Shelf refresh failed; serving the last good Shelf", error);
+}
+
+/**
+ * Runs a side effect that is not allowed to become a failure of its own.
+ *
+ * `serve` promises never to reject, and both injected hooks are somebody
+ * else's code: reporting a failed refresh and handing one to the host are
+ * bookkeeping, and neither may turn into the error this cache exists to keep
+ * off the visitor's screen.
+ */
+function withoutEscaping(effect: () => void): void {
+  try {
+    effect();
+  } catch (error) {
+    console.warn("A Shelf cache side effect threw and was ignored", error);
+  }
 }
