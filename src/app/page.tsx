@@ -1,7 +1,7 @@
 import { connection } from "next/server";
 
-import { DiscountCard } from "@/components/discount-card";
 import { ModeToggle } from "@/components/mode-toggle";
+import { ShelfView } from "@/components/shelf-view";
 import { describeFreshness } from "@/lib/shelf/freshness";
 import { liveShelf } from "@/lib/shelf/live-shelf";
 import type { ServedShelf } from "@/lib/shelf/cache";
@@ -56,13 +56,7 @@ function Shelf({ served: { shelf, fetchedAt } }: { served: ServedShelf }) {
         </p>
       </header>
 
-      <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {shelf.discounts.map((discount) => (
-          <li key={discount.storeUrl} className="flex">
-            <DiscountCard discount={discount} />
-          </li>
-        ))}
-      </ul>
+      <ShelfView shelf={shelf} />
     </>
   );
 }
