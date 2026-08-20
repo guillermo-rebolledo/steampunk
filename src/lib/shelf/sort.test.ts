@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { discount } from "@/lib/shelf/discount-fixture";
 import { SORT_ORDERS, sortShelf, type SortOrder } from "@/lib/shelf/sort";
 import type { Discount, Shelf } from "@/lib/shelf/types";
 
@@ -10,21 +11,6 @@ import type { Discount, Shelf } from "@/lib/shelf/types";
  */
 function shelfOf(...discounts: Discount[]): Shelf {
   return { discounts, totalRankable: 4651 };
-}
-
-function discount(overrides: Partial<Discount> & { title: string }): Discount {
-  return {
-    appId: 1,
-    capsuleUrl: "https://example.invalid/capsule.jpg",
-    storeUrl: `https://store.steampowered.com/app/1/${overrides.title}/`,
-    depth: 50,
-    originalPrice: { amount: 2000, label: "$20.00" },
-    finalPrice: { amount: 1000, label: "$10.00" },
-    reviews: { summary: "Very Positive", positivePercent: 85, count: 500 },
-    platforms: { windows: true, mac: false, linux: false },
-    releasedOn: "Nov 9, 2022",
-    ...overrides,
-  };
 }
 
 /** Titles stand in for whole Discounts, so an expected order reads as one. */

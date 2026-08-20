@@ -57,6 +57,13 @@ export type Discount = {
   readonly platforms: PlatformSupport;
   /** Steam's preformatted release date, e.g. "Nov 9, 2022". */
   readonly releasedOn: string;
+  /**
+   * Steam's tags for the game, named and ordered as Steam ranks them. Genres
+   * and tags are the same axis here — Steam files "Action" and "Roguelike" in
+   * one list and so does this. Empty when a row carries none we can name
+   * (ADR-0005).
+   */
+  readonly tags: readonly string[];
 };
 
 /**

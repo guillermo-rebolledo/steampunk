@@ -1,5 +1,7 @@
 import { parse, type HTMLElement } from "node-html-parser";
 
+import { nameTags } from "@/lib/shelf/tags";
+
 import type {
   Discount,
   PlatformSupport,
@@ -75,7 +77,26 @@ function toDiscount(row: HTMLElement): Discount | null {
     reviews,
     platforms: readPlatforms(row),
     releasedOn: row.querySelector(".search_released")?.textContent.trim() ?? "",
+    tags: readTags(row),
   };
+}
+
+/**
+ * Tags arrive as a JSON array of ids in an attribute — `[492,19,3871]`, most
+ * relevant first — and are named from the vendored lookup (ADR-0005). A row
+ * with no usable tags is still a Discount, so this returns an empty list
+ * rather than dropping it.
+ */
+function readTags(row: HTMLElement): string[] {
+  const raw = row.getAttribute("data-ds-tagids");
+  if (!raw) return [];
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return nameTags(parsed.filter((id): id is number => Number.isInteger(id)));
+  } catch {
+    return [];
+  }
 }
 
 /**
