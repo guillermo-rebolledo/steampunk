@@ -41,7 +41,8 @@ function Shelf({ served: { shelf, fetchedAt } }: { served: ServedShelf }) {
           The best-reviewed games discounted on Steam right now. Not every
           discount — Steam has {shelf.totalRankable.toLocaleString("en-US")}{" "}
           well-reviewed ones live, and these {shelf.discounts.length} are drawn
-          from the top of that ranking.
+          from the top of that ranking. Sorting, search and filters run over
+          those {shelf.discounts.length}, instantly, and over nothing else.
         </p>
         {/* Rough on purpose, and the machine-readable instant is on the `time`
             element for anything that wants it exactly. What the visitor needs

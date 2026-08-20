@@ -148,7 +148,63 @@ describe("fetchShelf", () => {
       },
       platforms: { windows: true, mac: false, linux: false },
       releasedOn: "Aug 7, 2025",
+      tags: [
+        "Puzzle Platformer",
+        "2D Platformer",
+        "Metroidvania",
+        "Exploration",
+        "Puzzle",
+        "2D",
+        "Cute",
+      ],
     });
+  });
+
+  it("names the tag ids a row carries, in the order Steam ranks them", async () => {
+    const { fetcher } = replayingSteam();
+
+    const shelf = await fetchShelf({ fetcher });
+
+    // Steam names a tag nowhere in the row — only `data-ds-tagids` — so the
+    // names come from the vendored lookup (ADR-0005).
+    const cats = shelf.discounts.find(
+      (d) => d.title === "A Castle Full of Cats",
+    );
+    expect(cats?.tags).toEqual([
+      "Cats",
+      "Hidden Object",
+      "Wholesome",
+      "Point & Click",
+      "Cozy",
+      "Relaxing",
+      "Puzzle",
+    ]);
+  });
+
+  it("drops a tag id it has no name for rather than showing the number", async () => {
+    const [good] = capturedRows();
+    const fetcher: Fetcher = replayingRows(
+      good.replace(
+        /data-ds-tagids="[^"]*"/,
+        'data-ds-tagids="[1664,99999999,3871]"',
+      ),
+    );
+
+    const shelf = await fetchShelf({ fetcher });
+
+    expect(shelf.discounts[0].tags).toEqual(["Puzzle", "2D"]);
+  });
+
+  it("leaves a row with no tag ids untagged rather than dropping it", async () => {
+    const [good] = capturedRows();
+    const fetcher: Fetcher = replayingRows(
+      good.replace(/data-ds-tagids="[^"]*"/, 'data-ds-tagids="not json"'),
+    );
+
+    const shelf = await fetchShelf({ fetcher });
+
+    expect(shelf.discounts).toHaveLength(1);
+    expect(shelf.discounts[0].tags).toEqual([]);
   });
 
   it("holds prices as integers for comparison and strings for display", async () => {
