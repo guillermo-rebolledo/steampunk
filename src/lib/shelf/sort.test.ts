@@ -177,6 +177,22 @@ describe("sortShelf", () => {
       ]);
     });
 
+    it("sends a date shaped right but numbered wrong to the end too", () => {
+      // Steam serves real dates, but the markup carries no guarantee
+      // (ADR-0004) and a day of 99 would otherwise land inside February.
+      const shelf = shelfOf(
+        discount({ title: "Impossible day", releasedOn: "Feb 99, 2025" }),
+        discount({ title: "Older", releasedOn: "Jan 15, 2025" }),
+        discount({ title: "Newer", releasedOn: "Mar 1, 2025" }),
+      );
+
+      expect(titlesOf(sortShelf(shelf, "released"))).toEqual([
+        "Newer",
+        "Older",
+        "Impossible day",
+      ]);
+    });
+
     it("sends a date it cannot read to the end rather than guessing at one", () => {
       const shelf = shelfOf(
         discount({ title: "Unreadable", releasedOn: "Coming soon" }),

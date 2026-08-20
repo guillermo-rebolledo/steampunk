@@ -104,5 +104,12 @@ function releaseKey(releasedOn: string): number | null {
   const month = MONTHS.indexOf(parts[1]);
   if (month === -1) return null;
 
-  return Number(parts[3]) * 10_000 + (month + 1) * 100 + Number(parts[2]);
+  // Right shape, wrong numbers: `Feb 99` would otherwise key to 20250299 and
+  // sort inside February as though it were a date. The day is range-checked
+  // rather than calendar-checked — this builds a sort key, not a date, and
+  // where a nonexistent `Feb 30` falls between real dates does not matter.
+  const day = Number(parts[2]);
+  if (day < 1 || day > 31) return null;
+
+  return Number(parts[3]) * 10_000 + (month + 1) * 100 + day;
 }
