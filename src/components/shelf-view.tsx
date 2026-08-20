@@ -39,19 +39,18 @@ export function ShelfView({ shelf }: { shelf: Shelf }) {
   const [filters, setFilters] = useState<ShelfFilters>(UNFILTERED);
   const [order, setOrder] = useState<SortOrder>("depth");
 
-  // Tag counts are facets, not a census: they count the Shelf as every other
-  // filter has already narrowed it, so a chip reading "Action 17" means
-  // picking it lands on seventeen rather than on a number taken from a Shelf
-  // the visitor is no longer looking at.
-  const tags = useMemo(
-    () => tagsOnShelf(filterShelf(shelf, { ...filters, tags: [] })),
-    [shelf, filters],
-  );
+  const narrowed = useMemo(() => filterShelf(shelf, filters), [shelf, filters]);
+  // Tag counts are facets, not a census: they count what is on screen right
+  // now, so an unselected chip reading "Action 17" means picking it lands on
+  // seventeen. Counting the whole Shelf instead — or the Shelf with the
+  // selected tags put back — would show a number the next click cannot
+  // produce, since tags compose by AND and only ever narrow further.
+  const tags = useMemo(() => tagsOnShelf(narrowed), [narrowed]);
   // Narrow first, then order: sorting what survives is cheaper than sorting
   // the whole Shelf on every keystroke, and the result is the same either way.
   const matching = useMemo(
-    () => sortShelf(filterShelf(shelf, filters), order).discounts,
-    [shelf, filters, order],
+    () => sortShelf(narrowed, order).discounts,
+    [narrowed, order],
   );
 
   const activeCount = activeFilterCount(filters);

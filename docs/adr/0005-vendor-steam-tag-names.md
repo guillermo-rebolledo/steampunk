@@ -12,9 +12,12 @@ Steam serves it as an array of `{tagid, name}`; we store it as a map keyed by
 `tagid`, sorted numerically, one name per id. Refresh it with:
 
 ```sh
-curl -s https://store.steampowered.com/tagdata/populartags/english |
-  jq -S 'map({(.tagid|tostring): .name}) | add' \
-  > src/lib/shelf/steam-tags.json
+# Via a temporary file, and only moved into place once jq has produced
+# something: redirecting straight onto the vendored file truncates it before
+# the request is even made, so a bad day at Steam would empty it.
+curl -sS --fail https://store.steampowered.com/tagdata/populartags/english |
+  jq -S 'map({(.tagid|tostring): .name}) | add' > steam-tags.json.new &&
+  mv steam-tags.json.new src/lib/shelf/steam-tags.json
 ```
 
 ## Considered options

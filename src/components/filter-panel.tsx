@@ -56,8 +56,8 @@ export function FilterPanel({
   filters: ShelfFilters;
   onChange: (filters: ShelfFilters) => void;
   /**
-   * The tags to offer, already counted against the Shelf as every *other*
-   * filter has narrowed it — so a count is what picking that tag would yield.
+   * The tags carried by the Discounts currently on screen, with their counts
+   * — so an unselected tag's count is exactly what picking it would leave.
    */
   tags: readonly TagCount[];
   /** How many filters are doing something — 0 means the whole Shelf. */
@@ -76,20 +76,15 @@ export function FilterPanel({
   // open regardless, so the first render is the same on server and client.
   const [showControls, setShowControls] = useState(false);
 
-  // Selected tags lead and are never collapsed away. A filter the visitor
-  // cannot see is a filter they cannot turn off — and a tag can fall to zero
-  // once the other filters move, which would otherwise take it off screen
-  // while it was still narrowing the Shelf.
-  const counted = new Map(tags.map((tag) => [tag.name, tag.count]));
-  const selectedTags = filters.tags.map((name) => ({
-    name,
-    count: counted.get(name) ?? 0,
-  }));
+  // Selected tags lead, are drawn from the filters rather than from the
+  // counts, and are never collapsed away. A filter the visitor cannot see is
+  // a filter they cannot turn off — and once the other filters narrow to
+  // nothing there are no counts at all, which would otherwise take every
+  // active tag off screen and strand the visitor on an empty Shelf.
   const unselectedTags = tags.filter((tag) => !filters.tags.includes(tag.name));
-  const visibleTags = [
-    ...selectedTags,
-    ...(showAllTags ? unselectedTags : unselectedTags.slice(0, TAGS_SHOWN)),
-  ];
+  const collapsedTags = showAllTags
+    ? unselectedTags
+    : unselectedTags.slice(0, TAGS_SHOWN);
 
   function toggleTag(name: string) {
     onChange({ ...filters, tags: toggled(filters.tags, name) });
@@ -207,7 +202,7 @@ export function FilterPanel({
           </fieldset>
         </div>
 
-        {tags.length > 0 && (
+        {(collapsedTags.length > 0 || filters.tags.length > 0) && (
           <div className="flex flex-col gap-2">
             <div
               id={tagsId}
@@ -215,33 +210,21 @@ export function FilterPanel({
               aria-label="Filter by tag or genre"
               className="flex flex-wrap gap-1.5"
             >
-              {visibleTags.map(({ name, count }) => {
-                const selected = filters.tags.includes(name);
-                return (
-                  <button
-                    key={name}
-                    type="button"
-                    aria-pressed={selected}
-                    onClick={() => toggleTag(name)}
-                    className={cn(
-                      "focus-visible:ring-ring/50 rounded-full border px-2.5 py-1 text-xs transition-colors outline-none focus-visible:ring-3",
-                      selected
-                        ? "bg-primary text-primary-foreground border-transparent"
-                        : "hover:bg-muted",
-                    )}
-                  >
-                    {name}{" "}
-                    <span
-                      className={cn(
-                        "tabular-nums",
-                        selected ? "opacity-70" : "text-muted-foreground",
-                      )}
-                    >
-                      {count}
-                    </span>
-                  </button>
-                );
-              })}
+              {/* A selected tag carries no count. Every Discount still on
+                  screen carries it, so its count is the headline count, and
+                  printing that number twice only invites reading the second
+                  one as something else. */}
+              {filters.tags.map((name) => (
+                <TagChip key={name} name={name} selected onToggle={toggleTag} />
+              ))}
+              {collapsedTags.map(({ name, count }) => (
+                <TagChip
+                  key={name}
+                  name={name}
+                  count={count}
+                  onToggle={toggleTag}
+                />
+              ))}
             </div>
 
             {unselectedTags.length > TAGS_SHOWN && (
@@ -255,7 +238,7 @@ export function FilterPanel({
               >
                 {showAllTags
                   ? "Show fewer tags"
-                  : `Show all ${tags.length} tags`}
+                  : `Show ${unselectedTags.length - TAGS_SHOWN} more tags`}
               </Button>
             )}
           </div>
@@ -271,6 +254,37 @@ export function FilterPanel({
         onClick={onClear}
       />
     </section>
+  );
+}
+
+function TagChip({
+  name,
+  count,
+  selected = false,
+  onToggle,
+}: {
+  name: string;
+  count?: number;
+  selected?: boolean;
+  onToggle: (name: string) => void;
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={selected}
+      onClick={() => onToggle(name)}
+      className={cn(
+        "focus-visible:ring-ring/50 rounded-full border px-2.5 py-1 text-xs transition-colors outline-none focus-visible:ring-3",
+        selected
+          ? "bg-primary text-primary-foreground border-transparent"
+          : "hover:bg-muted",
+      )}
+    >
+      {name}
+      {count !== undefined && (
+        <span className="text-muted-foreground tabular-nums"> {count}</span>
+      )}
+    </button>
   );
 }
 
