@@ -1,12 +1,21 @@
+import { connection } from "next/server";
+
 import { DiscountCard } from "@/components/discount-card";
 import { ModeToggle } from "@/components/mode-toggle";
 import { fetchShelf } from "@/lib/shelf/shelf";
 
 export default async function Home() {
+  // The Shelf is fetched per request, so rendering has to wait for a real one.
+  // Without this Next prerenders the page at build time and every visitor sees
+  // the discounts that happened to be live when it was built. This ticket
+  // caches nothing; MEM-163 is where a cache goes, in the fetcher below.
+  await connection();
+
   const shelf = await fetchShelf({
-    // The composition root owns the caching policy, so the data layer does not
-    // have to. Nothing is cached yet — MEM-163 is where that changes.
-    fetcher: (url) => fetch(url, { cache: "no-store" }),
+    // `fetch` is not cached by default in this Next, so there is nothing to opt
+    // out of here. Passing the fetcher in from the composition root is what
+    // lets MEM-163 add caching without the data layer knowing.
+    fetcher: fetch,
   });
 
   return (
@@ -19,8 +28,8 @@ export default async function Home() {
         <p className="text-muted-foreground max-w-2xl text-base text-pretty sm:text-lg">
           The best-reviewed games discounted on Steam right now. Not every
           discount — Steam has {shelf.totalRankable.toLocaleString("en-US")}{" "}
-          well-reviewed ones live, and this is the {shelf.discounts.length} it
-          rates highest.
+          well-reviewed ones live, and these {shelf.discounts.length} are drawn
+          from the top of that ranking.
         </p>
       </header>
 

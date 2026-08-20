@@ -13,7 +13,7 @@ type SearchResponse = {
 };
 
 /**
- * Fetches one page of Steam's specials and assembles the Shelf.
+ * Fetches one page of Steam's discounted games and assembles the Shelf.
  *
  * Selection is by review score, not by Discount depth — Steam silently ignores
  * a discount sort, so there is no server-side way to ask for the deepest cuts
@@ -40,6 +40,10 @@ export async function fetchShelf({
 
   const response = await fetcher(url.toString());
   if (!response.ok) {
+    // ADR-0004 says a 429 must serve the last good Shelf rather than an error,
+    // and Steam trips one after ~20 requests in a short window. There is no
+    // last good Shelf to serve until MEM-163 adds the cache, so until then a
+    // rate limit surfaces as a failed page rather than a stale one.
     throw new Error(
       `Steam store search failed with ${response.status} ${response.statusText}`,
     );

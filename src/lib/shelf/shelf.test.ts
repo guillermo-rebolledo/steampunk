@@ -43,7 +43,7 @@ function capturedRows(): string[] {
 }
 
 describe("fetchShelf", () => {
-  it("asks Steam for one page of Rankable specials", async () => {
+  it("asks Steam for one page of Rankable Discounts", async () => {
     const { fetcher, urls } = replaying(capturedPayload);
 
     await fetchShelf({ fetcher });
@@ -173,6 +173,21 @@ describe("fetchShelf", () => {
         "the displayed prices",
         /<div class="discount_prices">[\s\S]*?<\/div><\/div>/,
       ],
+    ])(
+      "skips a row missing %s and keeps the rest of the Shelf",
+      async (_, gone) => {
+        const { fetcher } = replaying(withRows(good + third.replace(gone, "")));
+
+        const shelf = await fetchShelf({ fetcher });
+
+        expect(shelf.discounts.map((d) => d.appId)).toEqual([2721890]);
+      },
+    );
+
+    // A card cannot be drawn without these either, so they drop the row too.
+    it.each([
+      ["a title", /<span class="title">[\s\S]*?<\/span>/],
+      ["capsule art", /<div class="search_capsule">[\s\S]*?<\/div>/],
     ])(
       "skips a row missing %s and keeps the rest of the Shelf",
       async (_, gone) => {

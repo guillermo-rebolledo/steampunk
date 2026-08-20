@@ -26,7 +26,7 @@ export function DiscountCard({ discount }: { discount: Discount }) {
     <a
       href={storeUrl}
       aria-label={`${title} — ${depth}% off, ${finalPrice.label}, down from ${originalPrice.label}`}
-      className="group bg-card text-card-foreground w-full focus-visible:ring-ring hover:border-foreground/25 flex flex-col overflow-hidden rounded-lg border transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+      className="group bg-card text-card-foreground w-full hover:border-foreground/25 flex flex-col overflow-hidden rounded-lg border transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
     >
       <Image
         src={capsuleUrl}
@@ -45,7 +45,8 @@ export function DiscountCard({ discount }: { discount: Discount }) {
         <p className="text-sm">
           {reviews.summary}{" "}
           <span className="text-muted-foreground">
-            · {reviews.count.toLocaleString("en-US")} reviews
+            · {reviews.positivePercent}% of{" "}
+            {reviews.count.toLocaleString("en-US")} reviews
           </span>
         </p>
 
