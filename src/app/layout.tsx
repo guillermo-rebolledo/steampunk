@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 import localFont from "next/font/local";
 
 import { ThemeProvider } from "@/components/theme-provider";
@@ -10,8 +10,14 @@ const geistSans = Geist({
   subsets: ["latin"],
 });
 
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
 // Departure Mono by Helena Zhang, SIL Open Font License 1.1.
 // Licence ships alongside the file at src/fonts/DepartureMono-LICENSE.txt.
+// Headings only — despite the name it is not the monospace face here.
 // Ships a single Regular weight — no bold, no italic. See globals.css, which
 // disables weight synthesis so nothing renders a smeared faux-bold.
 const departureMono = localFont({
@@ -37,7 +43,7 @@ export default function RootLayout({
     // so the server and client markup differ here by design.
     <html
       lang="en"
-      className={`${geistSans.variable} ${departureMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${departureMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <body className="flex min-h-full flex-col">

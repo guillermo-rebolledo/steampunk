@@ -42,9 +42,10 @@ Two decisions worth knowing before you read the code:
 
 ## Fonts
 
-- **Geist Sans** (body) via `next/font/google`.
-- **[Departure Mono](https://departuremono.com/)** (headings and monospace) —
-  self-hosted via `next/font/local` from `src/fonts/`.
+- **Geist Sans** (body) and **Geist Mono** (monospace) via `next/font/google`.
+- **[Departure Mono](https://departuremono.com/)** (headings only) — self-hosted via
+  `next/font/local` from `src/fonts/`. Despite the name it is not the monospace face
+  here; `font-mono` is Geist Mono.
 
 Departure Mono is © 2022–2024 Helena Zhang and licensed under the **SIL Open Font
 License 1.1**; the licence ships beside the font at
