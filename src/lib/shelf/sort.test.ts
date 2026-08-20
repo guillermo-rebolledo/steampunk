@@ -27,10 +27,12 @@ function discount(overrides: Partial<Discount> & { title: string }): Discount {
   };
 }
 
-/** The order the Shelf came off Steam in, so a test can say "unchanged". */
-const titlesOf = (shelf: Shelf) => shelf.discounts.map((d) => d.title);
+/** Titles stand in for whole Discounts, so an expected order reads as one. */
+function titlesOf(shelf: Shelf): string[] {
+  return shelf.discounts.map((discount) => discount.title);
+}
 
-const everyOrder = SORT_ORDERS.map((order): SortOrder => order.value);
+const everyOrder: readonly SortOrder[] = SORT_ORDERS;
 
 describe("sortShelf", () => {
   describe("by discount depth", () => {
@@ -49,8 +51,6 @@ describe("sortShelf", () => {
     });
 
     it("ranks by depth and not by how little is left to pay", () => {
-      // 90% off a $60 game leaves more on the counter than 40% off a $5 one.
-      // Discount depth and final price are different axes (CONTEXT.md).
       const shelf = shelfOf(
         discount({
           title: "Cheap and shallow",
@@ -126,7 +126,6 @@ describe("sortShelf", () => {
     });
 
     it("breaks an equal percentage with the number of reviews behind it", () => {
-      // 96% of 40,000 is a stronger claim than 96% of 40.
       const shelf = shelfOf(
         discount({
           title: "Few",
@@ -265,16 +264,7 @@ describe("sortShelf", () => {
     );
   });
 
-  it("offers exactly the four orderings the interface names", () => {
-    expect(SORT_ORDERS.map((order) => order.value)).toEqual([
-      "depth",
-      "price",
-      "reviews",
-      "released",
-    ]);
-    for (const order of SORT_ORDERS) {
-      expect(order.label).not.toBe("");
-      expect(order.hint).not.toBe("");
-    }
+  it("offers exactly the four orderings the ticket asks for", () => {
+    expect(SORT_ORDERS).toEqual(["depth", "price", "reviews", "released"]);
   });
 });

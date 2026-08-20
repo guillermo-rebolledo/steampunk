@@ -1,4 +1,24 @@
+"use client";
+
 import { SORT_ORDERS, type SortOrder } from "@/lib/shelf/sort";
+
+/**
+ * What each ordering is called, and which way it runs.
+ *
+ * Kept here rather than beside the comparators so the sort module changes only
+ * when sorting does, and this one only when the wording does. Nothing can drift
+ * apart: the record is keyed by `SortOrder`, so a new ordering fails to compile
+ * until it is named.
+ *
+ * "Final price" is the glossary's term, and the distinction CONTEXT.md insists
+ * on — ranking by Discount depth is not ranking by final price.
+ */
+const ORDERINGS: Record<SortOrder, { name: string; direction: string }> = {
+  depth: { name: "Discount depth", direction: "Steepest cut first" },
+  price: { name: "Final price", direction: "Cheapest first" },
+  reviews: { name: "Review score", direction: "Best regarded first" },
+  released: { name: "Release date", direction: "Newest first" },
+};
 
 /**
  * How the visitor reorders the Shelf.
@@ -21,26 +41,30 @@ export function SortControl({
 }) {
   return (
     <fieldset className="flex flex-wrap items-center gap-2">
-      <legend className="sr-only">Sort the Shelf by</legend>
+      {/* A <legend> is laid out outside its fieldset's flow, so it cannot sit
+          in this row. It is hidden and repeated as the span below, word for
+          word — a group whose visible label and announced name disagree is its
+          own accessibility bug. */}
+      <legend className="sr-only">Sort by</legend>
       <span aria-hidden className="text-muted-foreground text-sm">
         Sort by
       </span>
 
       {SORT_ORDERS.map((order) => (
-        <label key={order.value} className="cursor-pointer">
+        <label key={order} className="cursor-pointer">
           <input
             type="radio"
             name="sort"
-            value={order.value}
-            checked={value === order.value}
-            onChange={() => onValueChange(order.value)}
+            value={order}
+            checked={value === order}
+            onChange={() => onValueChange(order)}
             className="peer sr-only"
           />
           <span className="border-border bg-background hover:bg-muted peer-checked:border-transparent peer-checked:bg-primary peer-checked:text-primary-foreground peer-focus-visible:border-ring peer-focus-visible:ring-ring/50 block rounded-lg border px-2.5 py-1.5 text-sm transition-colors peer-focus-visible:ring-3">
-            {order.label}
-            {/* Which way each ordering runs is not written on the chip, and
-                cannot be inferred from a pressed state, so it is said here. */}
-            <span className="sr-only"> — {order.hint}</span>
+            {ORDERINGS[order].name}
+            {/* Which way an ordering runs is not written on the chip, and
+                cannot be inferred from a checked state, so it is said here. */}
+            <span className="sr-only"> — {ORDERINGS[order].direction}</span>
           </span>
         </label>
       ))}

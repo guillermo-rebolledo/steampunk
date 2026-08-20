@@ -12,8 +12,9 @@ import type { Shelf } from "@/lib/shelf/types";
  *
  * The whole Shelf crosses to the client, which is the point: reordering is a
  * pure function over data already in hand (ADR-0003), so it costs no request,
- * shows no loading state and cannot fail. That is also why this is the one
- * client component in the tree — the sort has to live where the data is.
+ * shows no loading state and cannot fail. The Shelf is still fetched on the
+ * server and rendered there in its opening order; only the reordering needs a
+ * client, so only that is one.
  *
  * Discount depth is the order the Shelf opens in. It is the ordering Steam
  * itself refuses to serve (ADR-0001) and the one this app exists to offer.

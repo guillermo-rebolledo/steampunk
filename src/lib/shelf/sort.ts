@@ -12,46 +12,32 @@ import type { Discount, Shelf } from "@/lib/shelf/types";
  * Each ordering has one natural direction and no toggle. "Cheapest first" is
  * the question a visitor asks; "most expensive first" is not, and a direction
  * toggle would double the states in the interface to serve nobody.
+ *
+ * What each ordering is called is the interface's business, not this module's
+ * — see `sort-control.tsx`, which the compiler holds to this list.
  */
-export const SORT_ORDERS = [
-  {
-    value: "depth",
-    label: "Discount depth",
-    hint: "Steepest cut first",
-  },
-  {
-    value: "price",
-    label: "Price",
-    hint: "Cheapest first",
-  },
-  {
-    value: "reviews",
-    label: "Review score",
-    hint: "Best regarded first",
-  },
-  {
-    value: "released",
-    label: "Release date",
-    hint: "Newest first",
-  },
-] as const;
+export const SORT_ORDERS = ["depth", "price", "reviews", "released"] as const;
 
-export type SortOrder = (typeof SORT_ORDERS)[number]["value"];
+export type SortOrder = (typeof SORT_ORDERS)[number];
 
 /** How two Discounts compare: negative puts `a` first, 0 leaves them tied. */
 type Comparator = (a: Discount, b: Discount) => number;
 
 const COMPARATORS: Record<SortOrder, Comparator> = {
   // Depth, not final price. 100% off a free game and 75% off a $60 one are
-  // different propositions, and ranking by one is not ranking by the other.
+  // different propositions (CONTEXT.md).
   depth: (a, b) => b.depth - a.depth,
   // Steam's integer in minor units, never the label: compared as strings,
   // "$100.00" sorts before "$9.99".
   price: (a, b) => a.finalPrice.amount - b.finalPrice.amount,
+  // The percentage the card shows, so the visitor is sorted by the number they
+  // can read. Deliberately not Steam's own confidence-weighted rank, which
+  // would put 98% of 15,000 above 99% of 500 and look broken next to the
+  // figures on the cards — and which has already had its say, since it is what
+  // selected the Shelf in the first place (ADR-0001). The review count only
+  // separates games the percentage cannot.
   reviews: (a, b) =>
     b.reviews.positivePercent - a.reviews.positivePercent ||
-    // 96% of 40,000 reviews is a stronger claim than 96% of 40, so the count
-    // separates games the percentage cannot.
     b.reviews.count - a.reviews.count,
   released: (a, b) => {
     const left = releaseKey(a.releasedOn);
