@@ -11,3 +11,6 @@ npm-debug.log*
 *.tsbuildinfo
 next-env.d.ts
 coverage/
+
+# Macroscope drops a review worktree here.
+.worktrees/
