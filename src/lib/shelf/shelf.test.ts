@@ -195,6 +195,18 @@ describe("fetchShelf", () => {
     expect(shelf.discounts[0].tags).toEqual(["Puzzle", "2D"]);
   });
 
+  it("trims a tag name Steam publishes with a trailing space", async () => {
+    const [good] = capturedRows();
+    // 4878 is "Parody " and 5030 is "Dystopian " as Steam serves them.
+    const fetcher: Fetcher = replayingRows(
+      good.replace(/data-ds-tagids="[^"]*"/, 'data-ds-tagids="[4878,5030]"'),
+    );
+
+    const shelf = await fetchShelf({ fetcher });
+
+    expect(shelf.discounts[0].tags).toEqual(["Parody", "Dystopian"]);
+  });
+
   it("names a repeated tag id once — a Discount's tags are a set", async () => {
     const [good] = capturedRows();
     const fetcher: Fetcher = replayingRows(

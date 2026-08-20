@@ -11,8 +11,8 @@ import tagNames from "@/lib/shelf/steam-tags.json";
 const names: Record<string, string> = tagNames;
 
 /**
- * Names a list of tag ids, dropping any this list has no name for and any
- * name already seen.
+ * Names a list of tag ids: trimmed, deduplicated, and dropping any this list
+ * has no name for.
  *
  * Dropping unknown ids is deliberate: an id minted since the last refresh
  * would otherwise surface as a bare number in the filter panel. Losing a tag
@@ -22,8 +22,16 @@ const names: Record<string, string> = tagNames;
  * Deduplicating keeps a Discount's tags a set rather than a bag, which is
  * what everything downstream assumes — a repeat would count twice in the
  * facet counts and could claim more Discounts carry a tag than exist.
+ *
+ * Trimming is not defensive: Steam publishes "Parody " and "Dystopian " with
+ * a trailing space, and a tag name is sorted alphabetically and compared by
+ * value, so the space would misplace the chip and split the tag in two the
+ * moment anything keys on the name. The vendored file keeps Steam's names
+ * verbatim so it stays a faithful capture; this is where they are cleaned.
  */
 export function nameTags(tagIds: readonly number[]): string[] {
-  const named = tagIds.map((id) => names[String(id)]).filter((name) => !!name);
+  const named = tagIds
+    .map((id) => names[String(id)]?.trim())
+    .filter((name) => !!name);
   return [...new Set(named)];
 }
