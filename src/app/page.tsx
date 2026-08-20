@@ -1,5 +1,5 @@
 import { ModeToggle } from "@/components/mode-toggle";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 
 export default function Home() {
   return (
@@ -22,12 +22,17 @@ export default function Home() {
       </p>
 
       <div>
-        <Button
-          render={<a href="https://store.steampowered.com/specials" />}
-          size="lg"
+        {/* This navigates, so it stays a link and only borrows the button's
+            styling. Driving it through <Button render={<a />}> makes Base UI
+            treat an anchor as a button — it stamps on `type="button"` and a
+            redundant tabindex, and `nativeButton={false}` would "fix" that by
+            adding role="button", announcing a navigation as an action. */}
+        <a
+          href="https://store.steampowered.com/specials"
+          className={buttonVariants({ size: "lg" })}
         >
           Steam specials in the meantime
-        </Button>
+        </a>
       </div>
     </main>
   );
