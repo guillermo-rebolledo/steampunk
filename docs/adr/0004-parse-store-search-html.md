@@ -25,4 +25,5 @@ Steam rate-limits this endpoint. Measured: 10 parallel page fetches succeed in ~
 (5 pages per Shelf), and a 429 must serve the last good Shelf rather than an error.
 
 Per-discount expiry is **not** in the search HTML. Countdowns are therefore only possible
-at the Sale level and for the Daily Deal, never on an ordinary Shelf card.
+at the Sale level, never on an ordinary Shelf card. (This originally said "and for the
+Daily Deal" too; ADR-0006 found Steam publishes no expiry for the Daily Deal either.)

@@ -1,10 +1,14 @@
 import { connection } from "next/server";
+import { Suspense } from "react";
 
 import { ModeToggle } from "@/components/mode-toggle";
+import { SaleLayer } from "@/components/sale-layer";
 import { ShelfView } from "@/components/shelf-view";
+import { liveSaleLayer } from "@/lib/sales/live-sale-layer";
+import type { ServedSaleLayer } from "@/lib/sales/types";
+import type { ServedShelf } from "@/lib/shelf/cache";
 import { describeFreshness } from "@/lib/shelf/freshness";
 import { liveShelf } from "@/lib/shelf/live-shelf";
-import type { ServedShelf } from "@/lib/shelf/cache";
 
 export default async function Home() {
   // The Shelf is read per request, so rendering cannot be hoisted to build
@@ -14,14 +18,43 @@ export default async function Home() {
   // behind the visitor, so per-request rendering costs a memory read.
   await connection();
 
+  // Started here rather than inside `RunningNow` so the two assemblies overlap
+  // on a cold instance, and deliberately not awaited: the band is optional and
+  // the Shelf is the page, so a Spotlight lookup crawling towards its timeout
+  // must not hold up a Shelf that is already in hand. `serve` never rejects,
+  // so this cannot float away as an unhandled rejection.
+  const sales = liveSaleLayer.serve();
   const served = await liveShelf.serve();
 
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-8 px-4 py-12 sm:px-6 sm:py-16">
       <Masthead />
+      {/* Nothing for a fallback, because there is nothing honest to reserve
+          space for: whether there is a band at all is the answer being waited
+          on. In the ordinary case both caches are warm and this resolves into
+          the same flush, so nothing streams and nothing moves; the band
+          arriving late enough to push the Shelf down needs a cold instance,
+          which is once an hour at worst and the case where having the Shelf
+          sooner is worth more. */}
+      <Suspense fallback={null}>
+        <RunningNow layer={sales} />
+      </Suspense>
       {served === null ? <NoShelfYet /> : <Shelf served={served} />}
     </main>
   );
+}
+
+/**
+ * The Sale layer, awaited behind its own Suspense boundary so that whatever it
+ * costs is charged to itself and not to the Shelf below it.
+ */
+async function RunningNow({
+  layer,
+}: {
+  layer: Promise<ServedSaleLayer | null>;
+}) {
+  const served = await layer;
+  return served === null ? null : <SaleLayer layer={served} />;
 }
 
 function Masthead() {
@@ -37,6 +70,7 @@ function Shelf({ served: { shelf, fetchedAt } }: { served: ServedShelf }) {
   return (
     <>
       <header className="flex flex-col gap-3">
+        <h2 className="text-xl sm:text-2xl">On the Shelf</h2>
         <p className="text-muted-foreground max-w-2xl text-base text-pretty sm:text-lg">
           The best-reviewed games discounted on Steam right now. Not every
           discount — Steam has {shelf.totalRankable.toLocaleString("en-US")}{" "}
@@ -53,7 +87,8 @@ function Shelf({ served: { shelf, fetchedAt } }: { served: ServedShelf }) {
           <time dateTime={fetchedAt.toISOString()}>
             {describeFreshness(fetchedAt, new Date())}
           </time>
-          .
+          . No discount here counts down: Steam says when a campaign ends, but
+          never when an individual Discount does.
         </p>
       </header>
 
