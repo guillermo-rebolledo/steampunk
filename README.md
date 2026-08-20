@@ -64,4 +64,12 @@ downstream of the network — parsing, Shelf assembly, caching, price normalisat
 exercised through it against real captured Steam payloads, never mocked in isolation.
 Filtering and sorting are pure functions over a Shelf and are tested directly.
 
+The captured payload lives at `src/lib/shelf/fixtures/store-search.json`. Recapture it by
+saving the response body of Steam's store search verbatim:
+
+```bash
+curl "https://store.steampowered.com/search/results?specials=1&infinite=1&sort_by=Reviews_DESC&start=0&count=100&cc=us&l=english" \
+  > src/lib/shelf/fixtures/store-search.json
+```
+
 Issues live in Linear, not GitHub Issues — see `docs/agents/issue-tracker.md`.

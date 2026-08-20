@@ -1,39 +1,36 @@
+import { DiscountCard } from "@/components/discount-card";
 import { ModeToggle } from "@/components/mode-toggle";
-import { buttonVariants } from "@/components/ui/button";
+import { fetchShelf } from "@/lib/shelf/shelf";
 
-export default function Home() {
+export default async function Home() {
+  const shelf = await fetchShelf({
+    // The composition root owns the caching policy, so the data layer does not
+    // have to. Nothing is cached yet — MEM-163 is where that changes.
+    fetcher: (url) => fetch(url, { cache: "no-store" }),
+  });
+
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col justify-center gap-6 px-6 py-24">
-      <div className="flex flex-col gap-3">
+    <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-8 px-4 py-12 sm:px-6 sm:py-16">
+      <header className="flex flex-col gap-3">
         <div className="flex items-start justify-between gap-4">
-          <h1 className="text-4xl">Steampunk</h1>
+          <h1 className="text-3xl sm:text-4xl">Steampunk</h1>
           <ModeToggle />
         </div>
-        <p className="text-muted-foreground text-lg text-balance">
-          Well-reviewed games currently discounted on Steam, framed by the sales
-          they belong to.
+        <p className="text-muted-foreground max-w-2xl text-base text-pretty sm:text-lg">
+          The best-reviewed games discounted on Steam right now. Not every
+          discount — Steam has {shelf.totalRankable.toLocaleString("en-US")}{" "}
+          well-reviewed ones live, and this is the {shelf.discounts.length} it
+          rates highest.
         </p>
-      </div>
+      </header>
 
-      <p className="text-muted-foreground text-sm text-balance">
-        Nothing is on the shelf yet — this is the scaffold. Steam has thousands
-        of discounts running at any moment; Steampunk deliberately shows the
-        best-reviewed slice of them rather than all of them.
-      </p>
-
-      <div>
-        {/* This navigates, so it stays a link and only borrows the button's
-            styling. Driving it through <Button render={<a />}> makes Base UI
-            treat an anchor as a button — it stamps on `type="button"` and a
-            redundant tabindex, and `nativeButton={false}` would "fix" that by
-            adding role="button", announcing a navigation as an action. */}
-        <a
-          href="https://store.steampowered.com/specials"
-          className={buttonVariants({ size: "lg" })}
-        >
-          Steam specials in the meantime
-        </a>
-      </div>
+      <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        {shelf.discounts.map((discount) => (
+          <li key={discount.storeUrl} className="flex">
+            <DiscountCard discount={discount} />
+          </li>
+        ))}
+      </ul>
     </main>
   );
 }
