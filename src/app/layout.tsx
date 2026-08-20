@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+
+import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -17,33 +19,28 @@ export const metadata: Metadata = {
   description: "Browse well-reviewed games currently discounted on Steam.",
 };
 
-// shadcn's tokens are class-based (`.dark`), so nothing applies them on their
-// own. Setting the class before first paint keeps the system appearance
-// honoured without a flash of the wrong theme.
-const applySystemAppearance = `
-try {
-  if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-    document.documentElement.classList.add("dark");
-  }
-} catch {}
-`;
-
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
+    // next-themes writes the appearance class onto <html> before hydration,
+    // so the server and client markup differ here by design.
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: applySystemAppearance }} />
-      </head>
-      <body className="bg-background text-foreground flex min-h-full flex-col">
-        {children}
+      <body className="flex min-h-full flex-col">
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );
