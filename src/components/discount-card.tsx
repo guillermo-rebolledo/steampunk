@@ -26,17 +26,31 @@ export function DiscountCard({ discount }: { discount: Discount }) {
     <a
       href={storeUrl}
       aria-label={`${title} — ${depth}% off, ${finalPrice.label}, down from ${originalPrice.label}`}
-      className="group bg-card text-card-foreground w-full hover:border-foreground/25 flex flex-col overflow-hidden rounded-lg border transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
+      // Border colour is the only thing hover changes, so it is the only thing
+      // named here: `transition-colors` would have the browser watch six
+      // properties on every one of ~500 cards.
+      className="group bg-card text-card-foreground hover:border-foreground/25 flex w-full flex-col overflow-hidden rounded-lg border transition-[border-color] duration-150 ease-out focus-visible:outline-2 focus-visible:outline-offset-2"
     >
       <Image
         src={capsuleUrl}
         // The capsule is the game's name set in its own lettering, so it says
         // nothing the heading below does not already say.
         alt=""
-        width={462}
-        height={174}
-        sizes="(min-width: 1280px) 24rem, (min-width: 640px) 45vw, 92vw"
-        className="bg-muted aspect-[231/87] w-full object-cover"
+        // Steam's capsule really is 231x87, so these are its intrinsic pixels
+        // rather than a 2x hint the optimiser could not honour anyway.
+        width={231}
+        height={87}
+        // A ~500-card Shelf means ~500 distinct remote images, and running
+        // each through the image optimiser buys a few KB off an 18KB JPEG in
+        // exchange for ~500 cold transcodes. Steam already serves it at the
+        // size and format the card wants. Lazy loading, which is what keeps
+        // the Shelf cheap to open, is Image's default and stays on.
+        unoptimized
+        // The capsule's own edge, so it does not bleed into the card body.
+        // Transparent black and white rather than the border token: this
+        // outlines an image, and a neutral that is not pure reads as dirt
+        // along the artwork's edge.
+        className="bg-muted aspect-[231/87] w-full border-b border-black/10 object-cover dark:border-white/10"
       />
 
       <div className="flex flex-1 flex-col gap-3 p-4">
@@ -55,7 +69,7 @@ export function DiscountCard({ discount }: { discount: Discount }) {
         </p>
 
         <p className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-          <span className="bg-discount text-discount-foreground rounded px-1.5 py-0.5 text-sm">
+          <span className="bg-discount text-discount-foreground rounded-sm px-1.5 py-0.5 text-sm">
             −{depth}%
           </span>
           <s className="text-muted-foreground text-sm">{originalPrice.label}</s>
