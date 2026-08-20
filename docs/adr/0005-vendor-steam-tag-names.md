@@ -12,11 +12,14 @@ Steam serves it as an array of `{tagid, name}`; we store it as a map keyed by
 `tagid`, sorted numerically, one name per id. Refresh it with:
 
 ```sh
-# Via a temporary file, and only moved into place once jq has produced
-# something: redirecting straight onto the vendored file truncates it before
-# the request is even made, so a bad day at Steam would empty it.
+# Via a temporary file, and moved into place only once jq has confirmed a
+# non-empty object: redirecting straight onto the vendored file truncates it
+# before the request is even made, so a bad day at Steam would empty it.
+# `sort_by(.tagid)` and not `jq -S`, which sorts "100" before "19".
 curl -sS --fail https://store.steampowered.com/tagdata/populartags/english |
-  jq -S 'map({(.tagid|tostring): .name}) | add' > steam-tags.json.new &&
+  jq -e 'sort_by(.tagid) | map({(.tagid|tostring): .name}) | add
+         | if length > 0 then . else error("no tags") end' \
+  > steam-tags.json.new &&
   mv steam-tags.json.new src/lib/shelf/steam-tags.json
 ```
 

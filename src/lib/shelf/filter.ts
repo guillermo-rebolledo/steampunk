@@ -122,7 +122,11 @@ export function isClearable(filters: ShelfFilters): boolean {
 export function tagsOnShelf(shelf: Shelf): TagCount[] {
   const counts = new Map<string, number>();
   for (const discount of shelf.discounts) {
-    for (const tag of discount.tags) {
+    // Through a Set, so a count is Discounts rather than tag entries. The
+    // parser already hands over distinct tags; this keeps the count honest
+    // for any Shelf, and stops a repeat claiming more Discounts carry a tag
+    // than the Shelf holds.
+    for (const tag of new Set(discount.tags)) {
       counts.set(tag, (counts.get(tag) ?? 0) + 1);
     }
   }

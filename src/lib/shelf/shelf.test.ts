@@ -195,6 +195,20 @@ describe("fetchShelf", () => {
     expect(shelf.discounts[0].tags).toEqual(["Puzzle", "2D"]);
   });
 
+  it("names a repeated tag id once — a Discount's tags are a set", async () => {
+    const [good] = capturedRows();
+    const fetcher: Fetcher = replayingRows(
+      good.replace(
+        /data-ds-tagids="[^"]*"/,
+        'data-ds-tagids="[1664,3871,1664]"',
+      ),
+    );
+
+    const shelf = await fetchShelf({ fetcher });
+
+    expect(shelf.discounts[0].tags).toEqual(["Puzzle", "2D"]);
+  });
+
   it("leaves a row with no tag ids untagged rather than dropping it", async () => {
     const [good] = capturedRows();
     const fetcher: Fetcher = replayingRows(

@@ -313,6 +313,16 @@ describe("tagsOnShelf", () => {
     expect(tagsOnShelf({ discounts: [], totalRankable: 4651 })).toEqual([]);
   });
 
+  it("counts Discounts rather than tag entries, whatever it is handed", () => {
+    // A Discount whose tags repeat is not something the parser produces, but
+    // a count that outran the number of Discounts would be a visible lie.
+    const twice = discount({ title: "Twice", tags: ["2D", "2D"] });
+
+    expect(tagsOnShelf({ discounts: [twice], totalRankable: 4651 })).toEqual([
+      { name: "2D", count: 1 },
+    ]);
+  });
+
   it("counts as a facet when handed an already-narrowed Shelf", () => {
     // What the interface hands it: the Shelf as every filter *except* tags
     // has left it. The counts are then what picking a tag would actually
