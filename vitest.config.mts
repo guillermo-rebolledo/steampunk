@@ -10,6 +10,8 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    include: ["src/**/*.test.ts"],
+    // Match .tsx too. A `.test.tsx` file under a `.ts`-only glob is skipped
+    // silently — the suite still reports green, so the gap is invisible.
+    include: ["src/**/*.test.{ts,tsx}"],
   },
 });
